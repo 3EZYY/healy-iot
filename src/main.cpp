@@ -1,18 +1,28 @@
 #include <Arduino.h>
+#include "sensor_module.h"
+#include "display_module.h"
 
-// put function declarations here:
-int myFunction(int, int);
+unsigned long previousMillis = 0;
+const long interval = 1000;
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  // Initialize Serial Monitor if debugging is needed
+  Serial.begin(115200);
+
+  initSensors();
+  initDisplay();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  unsigned long currentMillis = millis();
+  
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    
+    float temp = getTemperature();
+    int bpm = getBPM();
+    int spo2 = getSpO2();
+    
+    updateDisplay(temp, bpm, spo2);
+  }
 }
