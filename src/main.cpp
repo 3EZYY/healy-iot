@@ -1,18 +1,15 @@
 #include <Arduino.h>
-
-// put function declarations here:
-int myFunction(int, int);
+#include "audio_module.h"
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  // Initialize Serial Monitor if debugging is needed
+  Serial.begin(115200);
+
+  // Call the I2S initialization function to start the audio drivers
+  initI2S();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  // Continuously route microphone input directly to the speaker output
+  loopbackTest();
 }
