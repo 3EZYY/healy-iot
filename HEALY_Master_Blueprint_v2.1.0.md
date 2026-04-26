@@ -1143,6 +1143,10 @@ Hubungkan usecase dengan repository interface. Pastikan usecase tidak langsung i
 | Frontend | `lib/mock-telemetry.ts` | ✅ DONE | Blueprint §5.3, 80/15/5 distribution |
 | Frontend | `hooks/useTelemetry.ts` | ✅ DONE | Bridge hook: mock ↔ WebSocket |
 | Frontend | `ConnectionStatus.tsx` | ✅ DONE | Live connection state indicator |
+| Frontend | `lib/api.ts` | ✅ DONE | REST client for all §4.6 endpoints + login + mock fallback |
+| Frontend | History page (Recharts) | ✅ DONE | Area + Line charts, stats summary, records table |
+| Frontend | Settings page | ✅ DONE | Threshold form with validation + visual bars |
+| Audit | Full-Stack Integration Audit | ✅ DONE | F-01 login() added, F-03 nested types aligned |
 
 ---
 

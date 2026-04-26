@@ -17,17 +17,76 @@ function authHeaders(): HeadersInit {
   }
 }
 
+// ─── Auth Types (mirrors Go domain.LoginRequest/LoginResponse) ───
+
+export interface LoginRequest {
+  username: string
+  password: string
+}
+
+export interface LoginResponse {
+  token: string
+  expires_at: number  // Unix timestamp
+}
+
+/**
+ * POST /api/auth/login
+ * Authenticates and returns a JWT token.
+ */
+export async function login(req: LoginRequest): Promise<LoginResponse> {
+  if (USE_MOCK) {
+    await new Promise(r => setTimeout(r, 500))
+    return {
+      token: 'mock-jwt-token-healy-001',
+      expires_at: Math.floor(Date.now() / 1000) + 86400, // 24h from now
+    }
+  }
+
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Login failed: ${res.status}`)
+  }
+  return res.json()
+}
+
 // ─── Types for API Responses ───
 
+// TelemetryRecord mirrors Go's domain.TelemetryRecord JSON output.
+// Go embeds TelemetryPayload (device_id, timestamp, sensor) and adds status + created_at.
+// This matches the exact shape from json.Marshal(domain.TelemetryRecord{}).
 export interface TelemetryRecord {
   device_id: string
-  recorded_at: string
-  temperature: number
-  bpm: number
-  spo2: number
-  temp_status: SensorStatus
-  spo2_status: SensorStatus
-  overall_status: SensorStatus
+  timestamp: string          // ISO 8601 — Go json:"timestamp"
+  sensor: {
+    temperature: number
+    bpm: number
+    spo2: number
+  }
+  status: {
+    temperature: SensorStatus
+    spo2: SensorStatus
+    overall: SensorStatus
+  }
+  created_at?: string        // ISO 8601 — Go json:"created_at"
+}
+
+// Helper: extract flat values from a nested TelemetryRecord for charts/tables
+export function flattenRecord(r: TelemetryRecord) {
+  return {
+    device_id: r.device_id,
+    timestamp: r.timestamp,
+    temperature: r.sensor.temperature,
+    bpm: r.sensor.bpm,
+    spo2: r.sensor.spo2,
+    temp_status: r.status.temperature,
+    spo2_status: r.status.spo2,
+    overall_status: r.status.overall,
+  }
 }
 
 export interface ThresholdSettings {
@@ -61,15 +120,13 @@ function generateMockHistory(range: string): TelemetryRecord[] {
 
   return Array.from({ length: count }, (_, i) => {
     const payload = generateMockPayload()
+    const ts = new Date(now - (count - i) * step).toISOString()
     return {
       device_id: payload.device_id,
-      recorded_at: new Date(now - (count - i) * step).toISOString(),
-      temperature: payload.sensor.temperature,
-      bpm: payload.sensor.bpm,
-      spo2: payload.sensor.spo2,
-      temp_status: payload.status.temperature,
-      spo2_status: payload.status.spo2,
-      overall_status: payload.status.overall,
+      timestamp: ts,
+      sensor: payload.sensor,
+      status: payload.status,
+      created_at: ts,
     }
   })
 }

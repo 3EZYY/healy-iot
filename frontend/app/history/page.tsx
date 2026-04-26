@@ -38,17 +38,17 @@ function formatTime(iso: string, range: string): string {
 function computeStats(records: TelemetryRecord[]) {
   if (records.length === 0) return null
   const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length
-  const temps = records.map(r => r.temperature)
-  const bpms = records.map(r => r.bpm)
-  const spo2s = records.map(r => r.spo2)
+  const temps = records.map(r => r.sensor.temperature)
+  const bpms = records.map(r => r.sensor.bpm)
+  const spo2s = records.map(r => r.sensor.spo2)
 
   return {
     temperature: { min: Math.min(...temps), max: Math.max(...temps), avg: avg(temps) },
     bpm:         { min: Math.min(...bpms),  max: Math.max(...bpms),  avg: avg(bpms) },
     spo2:        { min: Math.min(...spo2s), max: Math.max(...spo2s), avg: avg(spo2s) },
     totalRecords: records.length,
-    criticalCount: records.filter(r => r.overall_status === 'CRITICAL').length,
-    warningCount:  records.filter(r => r.overall_status === 'WARNING').length,
+    criticalCount: records.filter(r => r.status.overall === 'CRITICAL').length,
+    warningCount:  records.filter(r => r.status.overall === 'WARNING').length,
   }
 }
 
@@ -90,12 +90,12 @@ export default function HistoryPage() {
   // Prepare chart data (chronological order)
   const chartData = records
     .slice()
-    .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map(r => ({
-      time: formatTime(r.recorded_at, range),
-      temperature: r.temperature,
-      bpm: r.bpm,
-      spo2: r.spo2,
+      time: formatTime(r.timestamp, range),
+      temperature: r.sensor.temperature,
+      bpm: r.sensor.bpm,
+      spo2: r.sensor.spo2,
     }))
 
   // Custom tooltip
@@ -278,13 +278,13 @@ export default function HistoryPage() {
                   {records.slice(0, 20).map((r, i) => (
                     <tr key={i} className="border-b border-healy-border/30 hover:bg-healy-bg-alt/30 transition-colors">
                       <td className="py-2.5 px-2 font-mono text-xs text-healy-slate">
-                        {new Date(r.recorded_at).toLocaleTimeString()}
+                        {new Date(r.timestamp).toLocaleTimeString()}
                       </td>
-                      <td className="py-2.5 px-2 text-right font-mono text-healy-graphite">{r.temperature.toFixed(1)}</td>
-                      <td className="py-2.5 px-2 text-right font-mono text-healy-graphite">{r.bpm}</td>
-                      <td className="py-2.5 px-2 text-right font-mono text-healy-graphite">{r.spo2}</td>
+                      <td className="py-2.5 px-2 text-right font-mono text-healy-graphite">{r.sensor.temperature.toFixed(1)}</td>
+                      <td className="py-2.5 px-2 text-right font-mono text-healy-graphite">{r.sensor.bpm}</td>
+                      <td className="py-2.5 px-2 text-right font-mono text-healy-graphite">{r.sensor.spo2}</td>
                       <td className="py-2.5 px-2 text-center">
-                        <StatusChip status={r.overall_status} size="sm" />
+                        <StatusChip status={r.status.overall} size="sm" />
                       </td>
                     </tr>
                   ))}
