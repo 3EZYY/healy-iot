@@ -8,10 +8,6 @@ AGENTS.md
 .vscode/
 
 # Backend (Golang) - JANGAN ABAIKAN FOLDERNYA, CUMA FILE SENSITIFNYA
-backend/.env
-backend/tmp/
-backend/bin/
-*.exe
 
 # Frontend (Next.js) - BUKA PAGARNYA!
 frontend/node_modules/

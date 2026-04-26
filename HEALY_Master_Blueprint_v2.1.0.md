@@ -1103,7 +1103,7 @@ Hubungkan usecase dengan repository interface. Pastikan usecase tidak langsung i
 - `useWebSocket` hook + mock generator.
 - Dashboard page: 3 sensor cards, alert feed, connection status.
 
-### FASE 6 — History, Settings, Integrasi E2E ⬜
+### FASE 6 — History, Settings, Integrasi E2E (DONE ✅)
 
 - History page dengan Recharts.
 - Settings page.
@@ -1143,6 +1143,9 @@ Hubungkan usecase dengan repository interface. Pastikan usecase tidak langsung i
 | Frontend | `lib/mock-telemetry.ts` | ✅ DONE | Blueprint §5.3, 80/15/5 distribution |
 | Frontend | `hooks/useTelemetry.ts` | ✅ DONE | Bridge hook: mock ↔ WebSocket |
 | Frontend | `ConnectionStatus.tsx` | ✅ DONE | Live connection state indicator |
+| Frontend | `lib/api.ts` | ✅ DONE | REST client for all §4.6 endpoints + mock fallback |
+| Frontend | History page (Recharts) | ✅ DONE | Area + Line charts, stats summary, records table |
+| Frontend | Settings page | ✅ DONE | Threshold form with validation + visual bars |
 
 ---
 
