@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* ─── Color Tokens (Blueprint §3.1) ─── */
+  --color-healy-bg:        #F8FAFB;
+  --color-healy-bg-alt:    #EFF4F2;
+  --color-healy-surface:   #FFFFFF;
+  --color-healy-sage:      #4CAF82;
+  --color-healy-sage-dark: #2E8B62;
+  --color-healy-mint:      #A8DFCC;
+  --color-healy-graphite:  #1A2633;
+  --color-healy-slate:     #5A7080;
+  --color-healy-border:    #D4E8DF;
+  --color-healy-warning:   #F5A623;
+  --color-healy-critical:  #E05252;
+
+  /* ─── Typography (Blueprint §3.2) ─── */
+  --font-display: 'Exo 2', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* ─── Border Radius ─── */
+  --radius-card: 16px;
+
+  /* ─── Box Shadows (Blueprint §3.3) ─── */
+  --shadow-card:       0 4px 24px rgba(46, 139, 98, 0.08);
+  --shadow-card-hover: 0 8px 32px rgba(46, 139, 98, 0.14);
+  --shadow-glow:       0 0 0 3px rgba(76, 175, 130, 0.20);
+
+  /* ─── Animations (Blueprint §3.5) ─── */
+  --animate-pulse-critical: pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-up: fadeUp 0.3s ease-out forwards;
+}
+
+@keyframes fadeUp {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── CSS Custom Properties (Blueprint §3.4) ─── */
+:root {
+  --color-bg:        #F8FAFB;
+  --color-bg-alt:    #EFF4F2;
+  --color-surface:   #FFFFFF;
+  --color-sage:      #4CAF82;
+  --color-sage-dark: #2E8B62;
+  --color-mint:      #A8DFCC;
+  --color-graphite:  #1A2633;
+  --color-slate:     #5A7080;
+  --color-border:    #D4E8DF;
+  --color-warning:   #F5A623;
+  --color-critical:  #E05252;
+
+  --font-display-var: 'Exo 2', sans-serif;
+  --font-body-var:    'DM Sans', sans-serif;
+  --font-mono-var:    'JetBrains Mono', monospace;
+
+  --radius-card-var: 16px;
+  --shadow-card-var: 0 4px 24px rgba(46, 139, 98, 0.08);
+  --shadow-glow-var: 0 0 0 3px rgba(76, 175, 130, 0.20);
+}
+
+/* ─── Base Styles ─── */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-graphite);
+  font-family: var(--font-body-var);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Hexagonal Grid Background (Blueprint §3.6) ─── */
+.hero-bg {
+  background-color: var(--color-bg);
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='52' viewBox='0 0 60 52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L60 17.3 L60 34.6 L30 52 L0 34.6 L0 17.3 Z' fill='none' stroke='%234CAF82' stroke-width='0.5' opacity='0.07'/%3E%3C/svg%3E");
+  background-size: 60px 52px;
+}
+
+/* ─── Utility Classes ─── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card-var);
+  box-shadow: var(--shadow-card-var);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.glass-card:hover {
+  box-shadow: 0 8px 32px rgba(46, 139, 98, 0.14);
+  transform: translateY(-2px);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-alt);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sage);
+}

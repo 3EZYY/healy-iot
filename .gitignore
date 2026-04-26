@@ -1,4 +1,4 @@
-# AI Metadata & Local Database (WAJIB DI-IGNORE)
+# AI Metadata & Local Database
 .code-review-graph/
 .agent/
 .claude/
@@ -24,5 +24,3 @@ node_modules/
 # OS Files
 .DS_Store
 Thumbs.db
-
-frontend/
