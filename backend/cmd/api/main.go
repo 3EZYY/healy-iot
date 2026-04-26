@@ -41,6 +41,7 @@ func main() {
 	// satisfying the interfaces expected by the usecase layer.
 	telemetryRepo := postgres.NewTelemetryRepository(dbPool)
 	userRepo := postgres.NewUserRepository(dbPool)
+	settingsRepo := postgres.NewSettingsRepository(dbPool)
 
 	// 5. Initialize Services/Utils
 	tokenGenerator := jwt.NewJWTGenerator(cfg)
@@ -55,7 +56,11 @@ func main() {
 	authUsecase := usecase.NewAuthUsecase(userRepo, tokenGenerator)
 
 	// 8. Initialize Delivery (HTTP Router)
-	router := deliveryHttp.SetupRouter(cfg, hub, telemetryUsecase, authUsecase)
+	// Pass tokenGenerator, telemetryRepo, and settingsRepo for full DI
+	router := deliveryHttp.SetupRouter(
+		cfg, hub, telemetryUsecase, authUsecase,
+		tokenGenerator, telemetryRepo, settingsRepo,
+	)
 
 	// 9. Setup Server
 	srv := &http.Server{

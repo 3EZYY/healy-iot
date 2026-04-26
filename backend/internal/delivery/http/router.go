@@ -4,14 +4,27 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rafif/healy-backend/internal/delivery/http/middleware"
 	"github.com/rafif/healy-backend/internal/delivery/websocket"
 	"github.com/rafif/healy-backend/internal/domain"
+	"github.com/rafif/healy-backend/internal/repository/interfaces"
 	"github.com/rafif/healy-backend/internal/usecase"
 	"github.com/rafif/healy-backend/pkg/config"
+	"github.com/rafif/healy-backend/pkg/jwt"
 )
 
 // SetupRouter creates and configures the Gin engine with all the routes.
-func SetupRouter(cfg *config.Config, hub *websocket.Hub, telemetryUsecase usecase.TelemetryUsecase, authUsecase usecase.AuthUsecase) *gin.Engine {
+// F-02 RESOLVED: JWT middleware now protects /api/telemetry, /api/settings, /api/device.
+// F-04 RESOLVED: Settings handler bridges DB columns to frontend ThresholdSettings DTO.
+func SetupRouter(
+	cfg *config.Config,
+	hub *websocket.Hub,
+	telemetryUsecase usecase.TelemetryUsecase,
+	authUsecase usecase.AuthUsecase,
+	tokenGenerator jwt.TokenGenerator,
+	telemetryRepo interfaces.TelemetryRepository,
+	settingsRepo interfaces.SettingsRepository,
+) *gin.Engine {
 	r := gin.Default()
 
 	// Configure CORS (basic example, adjust in production)
@@ -27,8 +40,13 @@ func SetupRouter(cfg *config.Config, hub *websocket.Hub, telemetryUsecase usecas
 		c.Next()
 	})
 
+	// Initialize handlers
+	telemetryHandler := NewTelemetryHandler(telemetryRepo)
+	settingsHandler := NewSettingsHandler(settingsRepo)
+
 	api := r.Group("/api")
 	{
+		// ─── Public: Auth ───
 		auth := api.Group("/auth")
 		{
 			auth.POST("/login", func(c *gin.Context) {
@@ -48,39 +66,36 @@ func SetupRouter(cfg *config.Config, hub *websocket.Hub, telemetryUsecase usecas
 			})
 		}
 
-		// Group that requires JWT validation
-		// TODO: Add JWT middleware here: protected.Use(middleware.JWTAuth())
+		// ─── Protected: requires valid JWT ───
+		// F-02: JWT middleware is now wired here
 		protected := api.Group("/")
+		protected.Use(middleware.JWTAuth(tokenGenerator))
 		{
+			// Telemetry endpoints — real handlers, no more TODOs
 			telemetry := protected.Group("/telemetry")
 			{
-				telemetry.GET("/history", func(c *gin.Context) {
-					// TODO: Implement history retrieval via telemetryUsecase
-					c.JSON(http.StatusOK, gin.H{"message": "History endpoint"})
-				})
-				telemetry.GET("/latest", func(c *gin.Context) {
-					// TODO: Implement latest retrieval via telemetryUsecase
-					c.JSON(http.StatusOK, gin.H{"message": "Latest endpoint"})
-				})
+				telemetry.GET("/history", telemetryHandler.GetHistory)
+				telemetry.GET("/latest", telemetryHandler.GetLatest)
 			}
 
+			// Settings endpoints — F-04: DTO bridge handles field mapping
 			settings := protected.Group("/settings")
 			{
-				settings.PUT("/threshold", func(c *gin.Context) {
-					// TODO: Implement threshold update
-					c.JSON(http.StatusOK, gin.H{"message": "Threshold updated"})
-				})
-				settings.GET("/threshold", func(c *gin.Context) {
-					// TODO: Implement threshold retrieval
-					c.JSON(http.StatusOK, gin.H{"message": "Threshold info"})
-				})
+				settings.GET("/threshold", settingsHandler.GetThreshold)
+				settings.PUT("/threshold", settingsHandler.UpdateThreshold)
 			}
 
+			// Device status endpoint
 			device := protected.Group("/device")
 			{
 				device.GET("/status", func(c *gin.Context) {
-					// TODO: Implement device status check
-					c.JSON(http.StatusOK, gin.H{"status": "CONNECTED"})
+					// MVP: return connected status.
+					// A full implementation would track device heartbeats via a thread-safe accessor.
+					c.JSON(http.StatusOK, gin.H{
+						"device_id": "healy-001",
+						"is_online": true,
+						"last_seen": "",
+					})
 				})
 			}
 		}

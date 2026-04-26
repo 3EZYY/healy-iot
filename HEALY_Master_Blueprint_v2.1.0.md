@@ -1134,6 +1134,11 @@ Hubungkan usecase dengan repository interface. Pastikan usecase tidak langsung i
 | Usecase | `internal/usecase/auth_usecase.go` | ✅ DONE | |
 | Delivery | `internal/delivery/websocket/hub.go` | ✅ DONE | Hub, client, dan handler selesai |
 | Delivery | `internal/delivery/http/router.go` | ✅ DONE | Routing dan server selesai |
+| Delivery | `internal/delivery/http/middleware/jwt_middleware.go` | ✅ DONE | F-02: JWT Bearer validation, injects user_id/username |
+| Delivery | `internal/delivery/http/telemetry_handler.go` | ✅ DONE | Real handlers for /history and /latest (replaces TODO stubs) |
+| Delivery | `internal/delivery/http/settings_handler.go` | ✅ DONE | F-04: DTO bridge (DB 4 cols ↔ frontend 5 fields) |
+| Repository | `internal/repository/interfaces/settings_repo.go` | ✅ DONE | GetByDeviceID + Upsert |
+| Repository | `internal/repository/postgres/settings_postgres.go` | ✅ DONE | ON CONFLICT upsert + default fallback |
 | Config | `pkg/config/config.go` | ✅ DONE | |
 | Frontend | Design tokens + Tailwind | ✅ DONE | Tailwind v4 @theme, globals.css, design-tokens.ts |
 | Frontend | SensorCard, StatusChip | ✅ DONE | + NavSidebar, glass-card, framer-motion |
@@ -1146,7 +1151,7 @@ Hubungkan usecase dengan repository interface. Pastikan usecase tidak langsung i
 | Frontend | `lib/api.ts` | ✅ DONE | REST client for all §4.6 endpoints + login + mock fallback |
 | Frontend | History page (Recharts) | ✅ DONE | Area + Line charts, stats summary, records table |
 | Frontend | Settings page | ✅ DONE | Threshold form with validation + visual bars |
-| Audit | Full-Stack Integration Audit | ✅ DONE | F-01 login() added, F-03 nested types aligned |
+| Audit | Full-Stack Integration Audit | ✅ DONE | F-01 ✅ F-02 ✅ F-03 ✅ F-04 ✅ — All findings resolved |
 
 ---
 
