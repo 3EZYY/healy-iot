@@ -2,7 +2,9 @@ package http
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rafif/healy-backend/internal/delivery/http/middleware"
 	"github.com/rafif/healy-backend/internal/delivery/websocket"
@@ -27,18 +29,30 @@ func SetupRouter(
 ) *gin.Engine {
 	r := gin.Default()
 
-	// Configure CORS (basic example, adjust in production)
-	r.Use(func(c *gin.Context) {
-		// Example using cfg.CORSAllowedOrigins. For a proper implementation, use github.com/gin-contrib/cors
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, device_id")
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	})
+	// ── CORS Middleware ────────────────────────────────────────────
+	// Membaca CORS_ALLOWED_ORIGINS dari config (sudah di-parse jadi []string).
+	// Contoh nilai: ["http://localhost:3000", "https://healy.vercel.app"]
+	// Referensi: HEALY_Master_Blueprint v2.1.0 Section 7.1 & 8.1
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: cfg.CORSAllowedOrigins,
+		AllowMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+			http.MethodOptions,
+		},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Length",
+			"Content-Type",
+			"Authorization",
+			"device_id",
+		},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Initialize handlers
 	telemetryHandler := NewTelemetryHandler(telemetryRepo)

@@ -1156,6 +1156,7 @@ Hubungkan usecase dengan repository interface. Pastikan usecase tidak langsung i
 | Frontend | History page refactor | ✅ DONE | Skeleton fallback, `role="alert"/"status"`, `aria-pressed`, `scope="col"` on table |
 | Frontend | a11y retrofit (all pages) | ✅ DONE | `aria-label` on all buttons, nav, forms, inputs; `aria-hidden` on decorative icons |
 | Frontend | Landing page a11y | ✅ DONE | `aria-labelledby` on sections, nav landmark with `aria-label` |
+| Deployment | CORS & Env Preparation | ✅ DONE | `gin-contrib/cors` wired in router, reads `CORS_ALLOWED_ORIGINS` from config; `backend/.env.example` & `frontend/.env.example` aligned with Blueprint §7 for Railway + Vercel |
 
 ---
 
