@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { fetchThresholds, updateThresholds, type ThresholdSettings } from '@/lib/api'
-import { Settings, Save, RotateCcw, Loader2, CheckCircle, AlertCircle, Thermometer, Wind } from 'lucide-react'
+import { Save, RotateCcw, Loader2, CheckCircle, AlertCircle, Thermometer, Wind } from 'lucide-react'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -48,6 +48,7 @@ function ThresholdInput({
           min={min}
           max={max}
           step={step}
+          aria-label={`${label} threshold value in ${unit}`}
           className="
             w-full px-4 py-3 pr-14 rounded-xl
             bg-healy-bg border border-healy-border
@@ -262,11 +263,11 @@ export default function SettingsPage() {
         {/* Visual threshold bar */}
         <div className="mt-6 pt-4 border-t border-healy-border/50">
           <p className="text-xs font-body text-healy-slate mb-2">Threshold Visualization</p>
-          <div className="flex items-center h-8 rounded-lg overflow-hidden text-[10px] font-mono text-white">
+          <div className="flex items-center h-8 rounded-lg overflow-hidden text-[10px] font-mono text-white" role="img" aria-label={`Temperature threshold visualization: Critical below ${settings.temp_normal_min}, Normal ${settings.temp_normal_min} to ${settings.temp_normal_max}, Warning ${settings.temp_normal_max} to ${settings.temp_warn_max}, Critical above ${settings.temp_warn_max}`}>
             <div className="bg-healy-critical/70 flex-1 flex items-center justify-center">
               &lt; {settings.temp_normal_min}
             </div>
-            <div className="bg-healy-sage flex-[2] flex items-center justify-center">
+            <div className="bg-healy-sage flex-2 flex items-center justify-center">
               {settings.temp_normal_min} — {settings.temp_normal_max}
             </div>
             <div className="bg-healy-warning flex-1 flex items-center justify-center">
@@ -323,14 +324,14 @@ export default function SettingsPage() {
         {/* Visual threshold bar */}
         <div className="mt-6 pt-4 border-t border-healy-border/50">
           <p className="text-xs font-body text-healy-slate mb-2">Threshold Visualization</p>
-          <div className="flex items-center h-8 rounded-lg overflow-hidden text-[10px] font-mono text-white">
+          <div className="flex items-center h-8 rounded-lg overflow-hidden text-[10px] font-mono text-white" role="img" aria-label={`SpO₂ threshold visualization: Critical below ${settings.spo2_warn_min}, Warning ${settings.spo2_warn_min} to ${settings.spo2_normal_min}, Normal above ${settings.spo2_normal_min}`}>
             <div className="bg-healy-critical flex-1 flex items-center justify-center">
               &lt; {settings.spo2_warn_min}
             </div>
             <div className="bg-healy-warning flex-1 flex items-center justify-center">
               {settings.spo2_warn_min} — {settings.spo2_normal_min}
             </div>
-            <div className="bg-healy-sage flex-[2] flex items-center justify-center">
+            <div className="bg-healy-sage flex-2 flex items-center justify-center">
               ≥ {settings.spo2_normal_min}
             </div>
           </div>
@@ -347,6 +348,7 @@ export default function SettingsPage() {
         <button
           onClick={handleReset}
           disabled={!hasChanges || saving}
+          aria-label="Reset threshold settings to last saved values"
           className="
             flex items-center gap-2 px-5 py-3 rounded-xl
             border border-healy-border text-healy-slate
@@ -356,12 +358,13 @@ export default function SettingsPage() {
             transition-all duration-200
           "
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-4 h-4" aria-hidden="true" />
           Reset
         </button>
         <button
           onClick={handleSave}
           disabled={!hasChanges || saving}
+          aria-label={saving ? 'Saving threshold settings' : 'Save threshold settings changes'}
           className="
             flex items-center gap-2 px-6 py-3 rounded-xl
             bg-healy-sage text-white
@@ -374,12 +377,12 @@ export default function SettingsPage() {
         >
           {saving ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               Saving...
             </>
           ) : (
             <>
-              <Save className="w-4 h-4" />
+              <Save className="w-4 h-4" aria-hidden="true" />
               Save Changes
             </>
           )}

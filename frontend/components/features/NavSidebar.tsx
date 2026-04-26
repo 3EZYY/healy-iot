@@ -20,15 +20,18 @@ export default function NavSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="
-      fixed left-0 top-0 bottom-0
-      w-64 bg-healy-surface border-r border-healy-border
-      flex flex-col
-      z-40
-    ">
+    <aside
+      aria-label="Main navigation sidebar"
+      className="
+        fixed left-0 top-0 bottom-0
+        w-64 bg-healy-surface border-r border-healy-border
+        flex flex-col
+        z-40
+      "
+    >
       {/* Logo */}
       <div className="p-6 border-b border-healy-border">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
+        <Link href="/dashboard" className="flex items-center gap-3 group" aria-label="HEALY Health Observer - Go to Dashboard">
           <div className="
             w-10 h-10 rounded-xl
             bg-healy-sage
@@ -51,7 +54,7 @@ export default function NavSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1" aria-label="Main navigation">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname?.startsWith(item.href)
           const Icon = item.icon
@@ -60,6 +63,8 @@ export default function NavSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-label={`Navigate to ${item.label}`}
+              aria-current={isActive ? 'page' : undefined}
               className={`
                 flex items-center gap-3 px-4 py-3 rounded-xl
                 font-body text-sm font-medium
@@ -71,7 +76,7 @@ export default function NavSidebar() {
                 }
               `}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-healy-sage' : ''}`} />
+              <Icon className={`w-5 h-5 ${isActive ? 'text-healy-sage' : ''}`} aria-hidden="true" />
               {item.label}
               {isActive && (
                 <span className="ml-auto w-1.5 h-1.5 rounded-full bg-healy-sage" />
@@ -84,6 +89,7 @@ export default function NavSidebar() {
       {/* Footer */}
       <div className="p-4 border-t border-healy-border">
         <button
+          aria-label="Logout from dashboard"
           className="
             flex items-center gap-3 w-full px-4 py-3 rounded-xl
             font-body text-sm font-medium text-healy-slate
@@ -91,7 +97,7 @@ export default function NavSidebar() {
             transition-all duration-200
           "
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-5 h-5" aria-hidden="true" />
           Logout
         </button>
       </div>

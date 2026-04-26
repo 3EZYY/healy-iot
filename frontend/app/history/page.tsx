@@ -2,22 +2,43 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, Area, AreaChart,
-} from 'recharts'
+import dynamic from 'next/dynamic'
 import StatusChip from '@/components/features/StatusChip'
 import { fetchTelemetryHistory, type TelemetryRecord } from '@/lib/api'
-import { Clock, TrendingUp, Thermometer, Heart, Wind, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Clock, TrendingUp, Thermometer, Heart, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import type { ChartDataPoint } from '@/components/features/HistoryCharts'
 
-// Blueprint §3.1 — Chart Colors mapped to design tokens
-const CHART_COLORS = {
-  temperature: '#4CAF82', // Sage Green
-  bpm:         '#E05252', // Coral Red
-  spo2:        '#3B82F6', // Blue accent
-  grid:        '#D4E8DF', // Pale Sage border
-  text:        '#5A7080', // Slate
-} as const
+// ─── Lazy-load Recharts (SSR disabled — Recharts depends on browser APIs) ───
+const HistoryCharts = dynamic(
+  () => import('@/components/features/HistoryCharts'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="space-y-6">
+        {/* Temperature chart skeleton */}
+        <div className="glass-card p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-healy-sage/10 animate-pulse" />
+            <div className="h-5 w-40 bg-healy-bg-alt rounded-lg animate-pulse" />
+          </div>
+          <div className="w-full h-70 bg-healy-bg-alt/50 rounded-xl animate-pulse flex items-center justify-center">
+            <Loader2 className="w-6 h-6 text-healy-sage/30 animate-spin" />
+          </div>
+        </div>
+        {/* BPM/SpO2 chart skeleton */}
+        <div className="glass-card p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-healy-critical/10 animate-pulse" />
+            <div className="h-5 w-44 bg-healy-bg-alt rounded-lg animate-pulse" />
+          </div>
+          <div className="w-full h-70 bg-healy-bg-alt/50 rounded-xl animate-pulse flex items-center justify-center">
+            <Loader2 className="w-6 h-6 text-healy-critical/30 animate-spin" />
+          </div>
+        </div>
+      </div>
+    ),
+  }
+)
 
 const TIME_RANGES = [
   { value: '1h',  label: '1 Hour' },
@@ -82,13 +103,17 @@ export default function HistoryPage() {
   }, [range])
 
   useEffect(() => {
-    loadData()
+    // Avoid synchronous setState by pushing to the next tick
+    const timer = setTimeout(() => {
+      loadData()
+    }, 0)
+    return () => clearTimeout(timer)
   }, [loadData])
 
   const stats = computeStats(records)
 
   // Prepare chart data (chronological order)
-  const chartData = records
+  const chartData: ChartDataPoint[] = records
     .slice()
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map(r => ({
@@ -97,22 +122,6 @@ export default function HistoryPage() {
       bpm: r.sensor.bpm,
       spo2: r.sensor.spo2,
     }))
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
-    if (!active || !payload) return null
-    return (
-      <div className="glass-card p-3 !rounded-xl text-xs">
-        <p className="font-mono text-healy-slate mb-2">{label}</p>
-        {payload.map((entry) => (
-          <p key={entry.name} className="font-body" style={{ color: entry.color }}>
-            {entry.name}: <span className="font-mono font-medium">{entry.name === 'temperature' ? entry.value.toFixed(1) : entry.value}</span>
-            {entry.name === 'temperature' ? '°C' : entry.name === 'bpm' ? ' BPM' : '%'}
-          </p>
-        ))}
-      </div>
-    )
-  }
 
   return (
     <motion.div
@@ -133,11 +142,13 @@ export default function HistoryPage() {
         </div>
         <div className="flex items-center gap-2">
           {/* Time Range Selector */}
-          <div className="flex bg-healy-bg-alt rounded-xl p-1 gap-1">
+          <div className="flex bg-healy-bg-alt rounded-xl p-1 gap-1" role="group" aria-label="Time range selector">
             {TIME_RANGES.map(tr => (
               <button
                 key={tr.value}
                 onClick={() => setRange(tr.value)}
+                aria-label={`Show ${tr.label} range`}
+                aria-pressed={range === tr.value}
                 className={`
                   px-4 py-2 rounded-lg text-xs font-body font-medium
                   transition-all duration-200
@@ -154,29 +165,30 @@ export default function HistoryPage() {
           <button
             onClick={loadData}
             disabled={loading}
+            aria-label="Refresh telemetry data"
             className="p-2.5 rounded-xl bg-healy-bg-alt text-healy-slate hover:text-healy-sage hover:bg-healy-sage/10 transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
         </div>
       </motion.div>
 
       {/* ─── Error State ─── */}
       {error && (
-        <motion.div variants={fadeUp} className="glass-card p-6 mb-6 border-healy-critical/20">
+        <motion.div variants={fadeUp} className="glass-card p-6 mb-6 border-healy-critical/20" role="alert">
           <div className="flex items-center gap-3 text-healy-critical">
-            <AlertCircle className="w-5 h-5" />
+            <AlertCircle className="w-5 h-5" aria-hidden="true" />
             <p className="text-sm font-body">{error}</p>
-            <button onClick={loadData} className="ml-auto text-xs font-body underline">Retry</button>
+            <button onClick={loadData} aria-label="Retry loading data" className="ml-auto text-xs font-body underline">Retry</button>
           </div>
         </motion.div>
       )}
 
       {/* ─── Loading State ─── */}
       {loading && (
-        <motion.div variants={fadeUp} className="flex items-center justify-center py-20">
+        <motion.div variants={fadeUp} className="flex items-center justify-center py-20" role="status" aria-label="Loading telemetry history">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 text-healy-sage animate-spin mx-auto mb-3" />
+            <Loader2 className="w-8 h-8 text-healy-sage animate-spin mx-auto mb-3" aria-hidden="true" />
             <p className="text-sm font-body text-healy-slate">Loading telemetry history...</p>
           </div>
         </motion.div>
@@ -187,7 +199,7 @@ export default function HistoryPage() {
         <>
           {/* Stats Summary */}
           {stats && (
-            <motion.div variants={fadeUp} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <motion.div variants={fadeUp} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" role="region" aria-label="Telemetry statistics summary">
               {[
                 { label: 'Records',  value: stats.totalRecords.toString(), icon: Clock,       color: 'text-healy-sage' },
                 { label: 'Avg Temp', value: `${stats.temperature.avg.toFixed(1)}°C`, icon: Thermometer, color: 'text-healy-sage' },
@@ -196,7 +208,7 @@ export default function HistoryPage() {
               ].map(stat => (
                 <div key={stat.label} className="glass-card p-4 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-healy-bg-alt flex items-center justify-center">
-                    <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                    <stat.icon className={`w-5 h-5 ${stat.color}`} aria-hidden="true" />
                   </div>
                   <div>
                     <span className="text-xs font-body text-healy-slate block">{stat.label}</span>
@@ -207,71 +219,46 @@ export default function HistoryPage() {
             </motion.div>
           )}
 
-          {/* Temperature Chart */}
-          <motion.div variants={fadeUp} className="glass-card p-6 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-healy-sage/10 flex items-center justify-center">
-                <Thermometer className="w-4 h-4 text-healy-sage" />
+          {/* ─── Charts (Lazy-loaded via next/dynamic) ─── */}
+          <motion.div variants={fadeUp} className="space-y-6 mb-6">
+            <div className="glass-card p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-lg bg-healy-sage/10 flex items-center justify-center">
+                  <Thermometer className="w-4 h-4 text-healy-sage" aria-hidden="true" />
+                </div>
+                <h2 className="text-lg font-display font-semibold text-healy-graphite">Temperature Trend</h2>
               </div>
-              <h2 className="text-lg font-display font-semibold text-healy-graphite">Temperature Trend</h2>
-            </div>
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="tempGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.temperature} stopOpacity={0.15} />
-                    <stop offset="95%" stopColor={CHART_COLORS.temperature} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
-                <XAxis dataKey="time" tick={{ fontSize: 10, fill: CHART_COLORS.text }} interval="preserveStartEnd" />
-                <YAxis domain={[35, 40]} tick={{ fontSize: 10, fill: CHART_COLORS.text }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="temperature" stroke={CHART_COLORS.temperature} fill="url(#tempGrad)" strokeWidth={2} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </motion.div>
-
-          {/* BPM & SpO2 Combined Chart */}
-          <motion.div variants={fadeUp} className="glass-card p-6 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-healy-critical/10 flex items-center justify-center">
-                <Heart className="w-4 h-4 text-healy-critical" />
+              <div className="mb-10">
+                {/* Temperature AreaChart + BPM/SpO2 LineChart are rendered together */}
+                <HistoryCharts chartData={chartData} />
               </div>
-              <h2 className="text-lg font-display font-semibold text-healy-graphite">Heart Rate & SpO₂</h2>
+              <div className="flex items-center gap-3 mb-6 pt-6 border-t border-healy-border/30">
+                <div className="w-8 h-8 rounded-lg bg-healy-critical/10 flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-healy-critical" aria-hidden="true" />
+                </div>
+                <h2 className="text-lg font-display font-semibold text-healy-graphite">Heart Rate & SpO₂</h2>
+              </div>
             </div>
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
-                <XAxis dataKey="time" tick={{ fontSize: 10, fill: CHART_COLORS.text }} interval="preserveStartEnd" />
-                <YAxis yAxisId="bpm" domain={[50, 120]} tick={{ fontSize: 10, fill: CHART_COLORS.text }} />
-                <YAxis yAxisId="spo2" orientation="right" domain={[80, 100]} tick={{ fontSize: 10, fill: CHART_COLORS.text }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'DM Sans' }} />
-                <Line yAxisId="bpm" type="monotone" dataKey="bpm" stroke={CHART_COLORS.bpm} strokeWidth={2} dot={false} name="BPM" />
-                <Line yAxisId="spo2" type="monotone" dataKey="spo2" stroke={CHART_COLORS.spo2} strokeWidth={2} dot={false} name="SpO₂ %" />
-              </LineChart>
-            </ResponsiveContainer>
           </motion.div>
 
           {/* Recent Records Table */}
           <motion.div variants={fadeUp} className="glass-card p-6">
             <div className="flex items-center gap-3 mb-4">
-              <TrendingUp className="w-5 h-5 text-healy-sage" />
+              <TrendingUp className="w-5 h-5 text-healy-sage" aria-hidden="true" />
               <h2 className="text-lg font-display font-semibold text-healy-graphite">Recent Records</h2>
               <span className="ml-auto text-xs font-mono text-healy-slate">
                 Showing latest {Math.min(records.length, 20)}
               </span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" aria-label="Recent telemetry records">
                 <thead>
                   <tr className="border-b border-healy-border">
-                    <th className="text-left py-3 px-2 text-xs font-body font-medium text-healy-slate">Time</th>
-                    <th className="text-right py-3 px-2 text-xs font-body font-medium text-healy-slate">Temp (°C)</th>
-                    <th className="text-right py-3 px-2 text-xs font-body font-medium text-healy-slate">BPM</th>
-                    <th className="text-right py-3 px-2 text-xs font-body font-medium text-healy-slate">SpO₂ (%)</th>
-                    <th className="text-center py-3 px-2 text-xs font-body font-medium text-healy-slate">Status</th>
+                    <th scope="col" className="text-left py-3 px-2 text-xs font-body font-medium text-healy-slate">Time</th>
+                    <th scope="col" className="text-right py-3 px-2 text-xs font-body font-medium text-healy-slate">Temp (°C)</th>
+                    <th scope="col" className="text-right py-3 px-2 text-xs font-body font-medium text-healy-slate">BPM</th>
+                    <th scope="col" className="text-right py-3 px-2 text-xs font-body font-medium text-healy-slate">SpO₂ (%)</th>
+                    <th scope="col" className="text-center py-3 px-2 text-xs font-body font-medium text-healy-slate">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -293,7 +280,7 @@ export default function HistoryPage() {
             </div>
             {records.length === 0 && (
               <div className="text-center py-12">
-                <Clock className="w-8 h-8 text-healy-slate/30 mx-auto mb-3" />
+                <Clock className="w-8 h-8 text-healy-slate/30 mx-auto mb-3" aria-hidden="true" />
                 <p className="text-sm font-body text-healy-slate">No telemetry records found for this time range.</p>
               </div>
             )}

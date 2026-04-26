@@ -98,7 +98,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" aria-label="Login form">
             {/* Error Banner */}
             {error && (
               <motion.div
@@ -158,6 +158,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-healy-slate hover:text-healy-graphite transition-colors"
                   tabIndex={-1}
                 >
@@ -170,6 +171,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
+              aria-label={isLoading ? 'Signing in, please wait' : 'Sign in to dashboard'}
               className="
                 w-full flex items-center justify-center gap-2
                 px-6 py-3.5 rounded-xl

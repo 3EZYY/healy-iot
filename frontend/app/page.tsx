@@ -58,7 +58,7 @@ export default function LandingPage() {
               HEALY
             </span>
           </Link>
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-8" aria-label="Landing page navigation">
             <a href="#features" className="text-sm font-body font-medium text-healy-slate hover:text-healy-sage transition-colors">Features</a>
             <a href="#capabilities" className="text-sm font-body font-medium text-healy-slate hover:text-healy-sage transition-colors">Capabilities</a>
             <Link
@@ -185,7 +185,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── Features Section ─── */}
-        <section id="features" className="bg-healy-bg-alt/50 py-24 border-t border-healy-border/30">
+        <section id="features" className="bg-healy-bg-alt/50 py-24 border-t border-healy-border/30" aria-labelledby="features-heading">
           <div className="max-w-6xl mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -194,7 +194,7 @@ export default function LandingPage() {
               transition={{ duration: 0.4 }}
               className="text-center mb-16"
             >
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-healy-graphite">
+              <h2 id="features-heading" className="text-3xl md:text-4xl font-display font-bold text-healy-graphite">
                 Three Vital Sensors
               </h2>
               <p className="mt-3 text-healy-slate font-body text-lg max-w-xl mx-auto">
@@ -228,7 +228,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── Capabilities Section ─── */}
-        <section id="capabilities" className="py-24">
+        <section id="capabilities" className="py-24" aria-labelledby="capabilities-heading">
           <div className="max-w-6xl mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -237,7 +237,7 @@ export default function LandingPage() {
               transition={{ duration: 0.4 }}
               className="text-center mb-16"
             >
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-healy-graphite">
+              <h2 id="capabilities-heading" className="text-3xl md:text-4xl font-display font-bold text-healy-graphite">
                 Built for Reliability
               </h2>
               <p className="mt-3 text-healy-slate font-body text-lg max-w-xl mx-auto">

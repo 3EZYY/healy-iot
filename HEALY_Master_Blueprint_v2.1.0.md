@@ -1152,6 +1152,10 @@ Hubungkan usecase dengan repository interface. Pastikan usecase tidak langsung i
 | Frontend | History page (Recharts) | ✅ DONE | Area + Line charts, stats summary, records table |
 | Frontend | Settings page | ✅ DONE | Threshold form with validation + visual bars |
 | Audit | Full-Stack Integration Audit | ✅ DONE | F-01 ✅ F-02 ✅ F-03 ✅ F-04 ✅ — All findings resolved |
+| Frontend | `HistoryCharts.tsx` (new) | ✅ DONE | Extracted Recharts into lazy-loadable component via `next/dynamic` (ssr:false) |
+| Frontend | History page refactor | ✅ DONE | Skeleton fallback, `role="alert"/"status"`, `aria-pressed`, `scope="col"` on table |
+| Frontend | a11y retrofit (all pages) | ✅ DONE | `aria-label` on all buttons, nav, forms, inputs; `aria-hidden` on decorative icons |
+| Frontend | Landing page a11y | ✅ DONE | `aria-labelledby` on sections, nav landmark with `aria-label` |
 
 ---
 
