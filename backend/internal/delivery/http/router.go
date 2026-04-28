@@ -48,6 +48,8 @@ func SetupRouter(
 			"Content-Type",
 			"Authorization",
 			"device_id",
+			"Upgrade",
+			"Connection",
 		},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
