@@ -1331,24 +1331,24 @@ Hubungkan `useAutoNarrative`, state `alerts`, dan komponen `AlertFeed` sesuai Se
 | Usecase | `internal/usecase/alert_usecase.go` | ✅ DONE | Threshold engine |
 | Usecase | `internal/usecase/telemetry_usecase.go` | ✅ DONE | Orchestrator |
 | Usecase | `internal/usecase/auth_usecase.go` | ✅ DONE | |
-| Delivery | `internal/delivery/websocket/hub.go` | ⬜ TODO | **MODIFY v3.0**: pisah viewerClients/deviceClients, broadcastSystem |
-| Delivery | `internal/delivery/websocket/handler.go` | ⬜ TODO | **MODIFY v3.0**: route ke registerViewer atau registerDevice |
+| Delivery | `internal/delivery/websocket/hub.go` | ✅ DONE | Separated viewer/device clients + broadcast system messages |
+| Delivery | `internal/delivery/websocket/handler.go` | ✅ DONE | Routed to registerViewer/Device channels |
 | Delivery | `internal/delivery/http/router.go` | ✅ DONE | |
 | Delivery | `internal/delivery/http/middleware/jwt_middleware.go` | ✅ DONE | |
 | Delivery | `internal/delivery/http/telemetry_handler.go` | ✅ DONE | |
 | Delivery | `internal/delivery/http/settings_handler.go` | ✅ DONE | |
 | Config | `pkg/config/config.go` | ✅ DONE | |
-| Frontend | `tailwind.config.ts` | ⬜ TODO | **MODIFY v3.0**: tambah healy-device-on/off, healy-ai-accent/surface |
-| Frontend | `src/constants/design-tokens.ts` | ⬜ TODO | **MODIFY v3.0**: tambah 4 warna baru |
-| Frontend | `src/types/telemetry.ts` | ⬜ TODO | **MODIFY v3.0**: tambah SystemMessage, AlertWithNarrative |
-| Frontend | `src/hooks/useWebSocket.ts` | ⬜ TODO | **MODIFY v3.0**: handle system messages, return deviceOnline |
+| Frontend | `frontend/app/globals.css` | ✅ DONE | Added Phase 10 tokens via Tailwind v4 @theme |
+| Frontend | `src/constants/design-tokens.ts` | ✅ DONE | Added 4 new color tokens |
+| Frontend | `src/types/telemetry.ts` | ✅ DONE | Added SystemMessage & WebSocketMessage union |
+| Frontend | `src/hooks/useWebSocket.ts` | ✅ DONE | Handled system messages + Exposed deviceOnline |
 | Frontend | `src/hooks/useAutoNarrative.ts` | ⬜ TODO | **NEW v3.0** Phase 11 |
-| Frontend | `src/lib/groq-client.ts` | ⬜ TODO | **NEW v3.0** Phase 10 |
-| Frontend | `src/components/features/DeviceLedIndicator.tsx` | ⬜ TODO | **NEW v3.0** Phase 10 |
-| Frontend | `src/components/features/AIInsightCard.tsx` | ⬜ TODO | **NEW v3.0** Phase 10 |
+| Frontend | `src/lib/groq-client.ts` | ✅ DONE | Groq REST integration with streaming |
+| Frontend | `src/components/features/DeviceLedIndicator.tsx` | ✅ DONE | Framer Motion pulse animation |
+| Frontend | `src/components/features/AIInsightCard.tsx` | ✅ DONE | On-demand AI insight generation |
 | Frontend | `src/components/features/AlertFeed.tsx` | ⬜ TODO | **MODIFY v3.0**: tampilkan AI narrative |
-| Frontend | `src/components/features/NavSidebar.tsx` | ⬜ TODO | **MODIFY v3.0**: tambah GroqKeySection |
-| Frontend | `src/app/dashboard/page.tsx` | ⬜ TODO | **MODIFY v3.0**: integrasi Phase 10 & 11 |
+| Frontend | `src/components/features/NavSidebar.tsx` | ✅ DONE | Added GroqKeySection with mask/save |
+| Frontend | `src/app/dashboard/page.tsx` | ✅ DONE | Integrated Phase 10 components |
 | Frontend | Design tokens + Tailwind | ✅ DONE | Base design system v2.1 |
 | Frontend | SensorCard, StatusChip, SparklineChart | ✅ DONE | |
 | Frontend | Dashboard, Landing, Login, History, Settings | ✅ DONE | |

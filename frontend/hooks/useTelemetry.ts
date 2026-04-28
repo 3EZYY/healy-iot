@@ -3,7 +3,7 @@
 // - In production: uses the real useWebSocket hook
 
 import { useState, useEffect, useRef } from 'react'
-import { TelemetryPayload, ConnectionState } from '@/types/telemetry'
+import { TelemetryPayload, ConnectionState, WebSocketMessage } from '@/types/telemetry'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { generateMockPayload } from '@/lib/mock-telemetry'
 
@@ -12,44 +12,58 @@ const MOCK_INTERVAL_MS = 2000 // Blueprint spec: 2-second refresh cycle
 interface TelemetrySource {
   data: TelemetryPayload | null
   conn: ConnectionState
+  deviceOnline: boolean
 }
 
 /**
  * Unified telemetry data provider.
  * Reads NEXT_PUBLIC_USE_MOCK_DATA to decide data source.
  */
-export function useTelemetry(): TelemetrySource {
+export function useTelemetry(
+  onMessage?: (data: WebSocketMessage) => void,
+  onStatusChange?: (status: ConnectionState['status']) => void
+): TelemetrySource {
   const useMock = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true'
   const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080/ws'
 
   if (useMock) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useMockTelemetry()
+    return useMockTelemetry(onMessage, onStatusChange)
   }
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useWebSocket(`${wsUrl}/telemetry`)
+  const { data, conn, deviceOnline } = useWebSocket(`${wsUrl}/viewer`, onMessage, onStatusChange)
+  return { data, conn, deviceOnline }
 }
 
 /** Internal mock provider using setInterval */
-function useMockTelemetry(): TelemetrySource {
-  const [data, setData] = useState<TelemetryPayload | null>(null)
-  const [conn, setConn] = useState<ConnectionState>({
+function useMockTelemetry(
+  onMessage?: (data: WebSocketMessage) => void,
+  onStatusChange?: (status: ConnectionState['status']) => void
+): TelemetrySource {
+  const [data, setData] = useState<TelemetryPayload | null>(() => generateMockPayload())
+  const [conn, setConn] = useState<ConnectionState>(() => ({
     status: 'CONNECTED',
-    lastUpdate: null,
+    lastUpdate: new Date(),
     retryCount: 0,
-  })
+  }))
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const onMessageRef = useRef(onMessage)
+  const onStatusRef = useRef(onStatusChange)
 
   useEffect(() => {
-    // Generate initial payload immediately
-    const initial = generateMockPayload()
-    setData(initial)
-    setConn(prev => ({ ...prev, lastUpdate: new Date() }))
+    onMessageRef.current = onMessage
+    onStatusRef.current = onStatusChange
+  }, [onMessage, onStatusChange])
 
-    // Then generate every MOCK_INTERVAL_MS
+  useEffect(() => {
+    // Notify "connection established" for mock
+    onStatusRef.current?.('CONNECTED')
+
+    // Generate every MOCK_INTERVAL_MS
     intervalRef.current = setInterval(() => {
       const payload = generateMockPayload()
+      onMessageRef.current?.(payload) // Trigger callback
       setData(payload)
       setConn(prev => ({ ...prev, lastUpdate: new Date() }))
     }, MOCK_INTERVAL_MS)
@@ -59,5 +73,5 @@ function useMockTelemetry(): TelemetrySource {
     }
   }, [])
 
-  return { data, conn }
+  return { data, conn, deviceOnline: true } // Mock device is always online
 }

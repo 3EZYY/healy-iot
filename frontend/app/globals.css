@@ -14,6 +14,12 @@
   --color-healy-border:    #D4E8DF;
   --color-healy-warning:   #F5A623;
   --color-healy-critical:  #E05252;
+  
+  /* ─── Phase 10 Colors ─── */
+  --color-healy-device-on: #22C55E;
+  --color-healy-device-off: #EF4444;
+  --color-healy-ai-accent: #7C3AED;
+  --color-healy-ai-surface: #F5F3FF;
 
   /* ─── Typography (Blueprint §3.2) ─── */
   --font-display: 'Exo 2', sans-serif;
@@ -51,6 +57,10 @@
   --color-border:    #D4E8DF;
   --color-warning:   #F5A623;
   --color-critical:  #E05252;
+  --color-device-on: #22C55E;
+  --color-device-off:#EF4444;
+  --color-ai-accent: #7C3AED;
+  --color-ai-surface:#F5F3FF;
 
   --font-display-var: 'Exo 2', sans-serif;
   --font-body-var:    'DM Sans', sans-serif;

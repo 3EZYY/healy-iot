@@ -2,13 +2,19 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import {
   LayoutDashboard,
   History,
   Settings,
   LogOut,
   Activity,
+  Key,
+  Check,
+  Eye,
+  EyeOff
 } from 'lucide-react'
+import { getStoredGroqKey, setStoredGroqKey, validateGroqKey } from '@/lib/groq-client'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -18,6 +24,25 @@ const NAV_ITEMS = [
 
 export default function NavSidebar() {
   const pathname = usePathname()
+  
+  const [apiKey, setApiKey] = useState(() => getStoredGroqKey() || '')
+  const [showKey, setShowKey] = useState(false)
+  const [keySaved, setKeySaved] = useState(false)
+  const [keyError, setKeyError] = useState(false)
+
+  // Remove the useEffect that was setting state synchronously
+  // useEffect(() => { ... }, []) is no longer needed
+
+  const handleSaveKey = () => {
+    if (validateGroqKey(apiKey)) {
+      setStoredGroqKey(apiKey)
+      setKeySaved(true)
+      setKeyError(false)
+      setTimeout(() => setKeySaved(false), 2000)
+    } else {
+      setKeyError(true)
+    }
+  }
 
   return (
     <aside
@@ -79,15 +104,44 @@ export default function NavSidebar() {
               <Icon className={`w-5 h-5 ${isActive ? 'text-healy-sage' : ''}`} aria-hidden="true" />
               {item.label}
               {isActive && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-healy-sage" />
+               <span className="ml-auto w-1.5 h-1.5 rounded-full bg-healy-sage" />
               )}
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Groq Configuration */}
       <div className="p-4 border-t border-healy-border">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Key className="w-4 h-4 text-healy-slate" />
+            <span className="text-xs font-semibold text-healy-graphite font-display">Groq API Key</span>
+          </div>
+          <div className="relative flex items-center">
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              onBlur={handleSaveKey}
+              placeholder="gsk_..."
+              className={`w-full text-xs font-mono px-3 py-2 pr-16 border rounded-lg focus:outline-none focus:ring-1 transition-colors ${
+                keyError ? 'border-healy-critical focus:ring-healy-critical' : 'border-healy-border focus:ring-healy-sage'
+              }`}
+            />
+            <div className="absolute right-2 flex items-center gap-1">
+              <button 
+                onClick={() => setShowKey(!showKey)}
+                className="p-1 text-healy-slate hover:text-healy-graphite transition-colors"
+              >
+                {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+              {keySaved && <Check size={14} className="text-healy-sage" />}
+            </div>
+          </div>
+          {keyError && <p className="text-[10px] text-healy-critical mt-1">Invalid Groq Key format</p>}
+        </div>
+
         <button
           aria-label="Logout from dashboard"
           className="

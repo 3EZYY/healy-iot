@@ -1,6 +1,15 @@
 package websocket
 
-import "log"
+import (
+	"encoding/json"
+	"log"
+)
+
+// SystemMessage is a non-telemetry message sent from Hub to Frontend
+type SystemMessage struct {
+	Type   string `json:"type"`   // always "system"
+	Status string `json:"status"` // "device_connected" | "device_disconnected"
+}
 
 // Hub maintains the set of active clients and broadcasts messages to the viewer clients.
 type Hub struct {
@@ -8,7 +17,7 @@ type Hub struct {
 	viewerClients map[*Client]bool
 
 	// Registered device clients (e.g., ESP32).
-	deviceClients map[string]*Client // key is device_id
+	deviceClients map[*Client]bool
 
 	// Inbound messages to broadcast to viewer clients.
 	Broadcast chan []byte
@@ -24,13 +33,31 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
+		viewerClients:    make(map[*Client]bool),
+		deviceClients:    make(map[*Client]bool),
 		Broadcast:        make(chan []byte, 256),
 		RegisterViewer:   make(chan *Client),
-		RegisterDevice:   make(chan *Client),
 		UnregisterViewer: make(chan *Client),
+		RegisterDevice:   make(chan *Client),
 		UnregisterDevice: make(chan *Client),
-		viewerClients:    make(map[*Client]bool),
-		deviceClients:    make(map[string]*Client),
+	}
+}
+
+func (h *Hub) broadcastSystem(status string) {
+	msg := SystemMessage{Type: "system", Status: status}
+	data, err := json.Marshal(msg)
+	if err != nil {
+		log.Printf("Error marshaling system message: %v\n", err)
+		return
+	}
+	// Send to all viewer clients
+	for client := range h.viewerClients {
+		select {
+		case client.send <- data:
+		default:
+			close(client.send)
+			delete(h.viewerClients, client)
+		}
 	}
 }
 
@@ -40,10 +67,10 @@ func (h *Hub) Run() {
 		case client := <-h.RegisterViewer:
 			h.viewerClients[client] = true
 			log.Println("Viewer client registered")
-
-		case client := <-h.RegisterDevice:
-			h.deviceClients[client.DeviceID] = client
-			log.Printf("Device client registered: %s\n", client.DeviceID)
+			// Send current device status to the newly connected viewer
+			if len(h.deviceClients) > 0 {
+				h.broadcastSystem("device_connected")
+			}
 
 		case client := <-h.UnregisterViewer:
 			if _, ok := h.viewerClients[client]; ok {
@@ -52,15 +79,25 @@ func (h *Hub) Run() {
 				log.Println("Viewer client unregistered")
 			}
 
+		case client := <-h.RegisterDevice:
+			h.deviceClients[client] = true
+			log.Printf("Device client registered: %s\n", client.DeviceID)
+			// Broadcast to all viewers: ESP32 is online
+			h.broadcastSystem("device_connected")
+
 		case client := <-h.UnregisterDevice:
-			if c, ok := h.deviceClients[client.DeviceID]; ok && c == client {
-				delete(h.deviceClients, client.DeviceID)
+			if _, ok := h.deviceClients[client]; ok {
+				delete(h.deviceClients, client)
 				close(client.send)
 				log.Printf("Device client unregistered: %s\n", client.DeviceID)
 			}
+			// Broadcast to all viewers: ESP32 offline if no devices left
+			if len(h.deviceClients) == 0 {
+				h.broadcastSystem("device_disconnected")
+			}
 
 		case message := <-h.Broadcast:
-			// Broadcast message to all viewer clients
+			// Forward telemetry data to all viewer clients
 			for client := range h.viewerClients {
 				select {
 				case client.send <- message:

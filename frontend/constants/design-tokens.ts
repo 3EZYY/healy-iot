@@ -18,6 +18,12 @@ export const COLORS = {
   statusCritical:'#E05252',  // Coral Red
 
   border:        '#D4E8DF',  // Pale Sage
+
+  // Phase 10 Colors
+  deviceOnline:  '#22C55E',   // Green-500
+  deviceOffline: '#EF4444',   // Red-500
+  aiAccent:      '#7C3AED',   // Violet-700
+  aiSurface:     '#F5F3FF',   // Violet-50
 } as const;
 
 // Blueprint §3.2 — Typography
