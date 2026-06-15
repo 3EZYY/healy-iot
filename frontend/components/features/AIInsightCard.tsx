@@ -14,10 +14,16 @@ interface AIInsightCardProps {
   currentData: GroqInsightRequest | null
 }
 
-// Ask the HEALY device to speak the given text aloud (handled by useVoiceAssistant).
-function speakOnDevice(text: string) {
-  if (typeof window === 'undefined' || !text.trim()) return
-  window.dispatchEvent(new CustomEvent('healy-speak', { detail: { text } }))
+// Bacakan teks lewat speaker laptop menggunakan Web Speech API browser.
+// (Sebelumnya dikirim ke speaker ESP32; sekarang output ditangani laptop.)
+function speakText(text: string) {
+  if (typeof window === 'undefined' || !window.speechSynthesis || !text.trim()) return
+  window.speechSynthesis.cancel()
+  const utter = new SpeechSynthesisUtterance(text)
+  utter.lang  = 'id-ID'
+  utter.rate  = 1.05
+  utter.pitch = 1.0
+  window.speechSynthesis.speak(utter)
 }
 
 export function AIInsightCard({ currentData }: AIInsightCardProps) {
@@ -47,8 +53,8 @@ export function AIInsightCard({ currentData }: AIInsightCardProps) {
       const fullText = await callGroqInsight(prompt, apiKey, (streamedText) => {
         setInsight(streamedText) // Update text as it streams
       })
-      // Setelah ringkasan selesai, langsung bacakan di speaker perangkat HEALY.
-      if (fullText?.trim()) speakOnDevice(fullText)
+      // Setelah ringkasan selesai, langsung bacakan lewat speaker laptop.
+      if (fullText?.trim()) speakText(fullText)
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Gagal menghubungi Groq AI. Periksa koneksi dan API key.'
       setError(message)
@@ -72,12 +78,12 @@ export function AIInsightCard({ currentData }: AIInsightCardProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Bacakan ulang ringkasan di speaker HEALY */}
+          {/* Bacakan ulang ringkasan lewat speaker laptop */}
           {insight && !loading && (
             <button
-              onClick={() => speakOnDevice(insight)}
-              title="Bacakan ulang di perangkat HEALY"
-              aria-label="Bacakan ulang ringkasan di perangkat HEALY"
+              onClick={() => speakText(insight)}
+              title="Bacakan ulang lewat speaker laptop"
+              aria-label="Bacakan ulang ringkasan lewat speaker laptop"
               className="flex items-center gap-1 text-healy-ai-accent text-xs font-medium
                          px-2.5 py-1.5 rounded-lg border border-healy-ai-accent/30
                          hover:bg-healy-ai-accent/10 transition-all duration-200"

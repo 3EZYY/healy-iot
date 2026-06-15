@@ -7,7 +7,6 @@
 #include "sensor_module.h"
 #include "display_module.h"
 #include "network_module.h"
-#include "audio_module.h"
 
 #define TELEMETRY_QUEUE_LEN  5
 #define JSON_BUF_SIZE        128
@@ -49,37 +48,27 @@ static void sensorDisplayTask(void* pvParameters) {
   }
 }
 
-// Core 0: WiFi guard + webSocket.loop() + telemetry dispatch + mic uplink.
-// ALL webSocket I/O lives here so the non-reentrant client has a single owner.
+
+// Core 0: handle WiFi/WebSocket lifecycle and ship queued telemetry frames.
 static void networkTask(void* pvParameters) {
   TelemetryMsg_t msg;
 
   for (;;) {
-    networkLoop();  // WiFi guard + webSocket.loop()
+    networkLoop();
 
     if (xQueueReceive(telemetryQueue, &msg, 0) == pdTRUE) {
       sendTelemetry(msg.json);
     }
 
-    networkAudioPump();  // drain captured mic PCM -> webSocket.sendBIN()
-
-    vTaskDelay(pdMS_TO_TICKS(5));  // tighter loop keeps PTT latency low
+    vTaskDelay(pdMS_TO_TICKS(5));
   }
 }
 
-// Core 0: I2S owner. Captures mic (when recording) or plays TTS downlink.
-// ALL i2s_read/i2s_write happens here; stream buffers bridge to networkTask.
-static void audioTask(void* pvParameters) {
-  for (;;) {
-    audioServiceLoop();
-    vTaskDelay(pdMS_TO_TICKS(5));  // WDT feed + yield
-  }
-}
 
 void setup() {
   Serial.begin(115200);
 
-  connectWiFi("ATAR ATAS", "atar1234");
+  connectWiFi("ATAR ATAS", "ataratas123");
   initWebSocket(nullptr, 0, "/ws/device?device_id=healy-esp32");
 
   Wire.begin(21, 22);
@@ -101,14 +90,14 @@ void setup() {
 
   initSensors();
   initDisplay();
-  initI2S();
 
   telemetryQueue = xQueueCreate(TELEMETRY_QUEUE_LEN, sizeof(TelemetryMsg_t));
   configASSERT(telemetryQueue);
 
+  // Audio (mic + speaker) kini ditangani sepenuhnya oleh browser/laptop, jadi
+  // device cukup menjalankan dua task: akuisisi sensor dan pengiriman telemetri.
   xTaskCreatePinnedToCore(sensorDisplayTask, "SensorDisplay", 8192, NULL, 2, NULL, 1);
   xTaskCreatePinnedToCore(networkTask,       "Network",       8192, NULL, 1, NULL, 0);
-  xTaskCreatePinnedToCore(audioTask,         "Audio",         6144, NULL, 1, NULL, 0);
 }
 
 void loop() {

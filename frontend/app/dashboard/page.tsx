@@ -12,7 +12,6 @@ import { useTelemetry } from '@/hooks/useTelemetry'
 import { useAutoNarrative } from '@/hooks/useAutoNarrative'
 import { useChatbot } from '@/hooks/useChatbot'
 import { AIChatPanel } from '@/components/features/AIChatPanel'
-import { AIVoiceButton } from '@/components/features/AIVoiceButton'
 import { Activity, Clock, Bell, AlertTriangle } from 'lucide-react'
 import { 
   SensorStatus, 
@@ -290,9 +289,6 @@ export default function DashboardPage() {
         onClear={clearHistory}
         context={chatContext}
       />
-
-      {/* ─── PTT Voice Assistant (F-05) — hidden while AI chat is open ─── */}
-      {!isOpen && <AIVoiceButton />}
     </motion.div>
   )
 }

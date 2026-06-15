@@ -1,5 +1,4 @@
 #include "network_module.h"
-#include "audio_module.h"
 #include <WiFi.h>
 #include <WebSocketsClient.h>
 #include <string.h>
@@ -15,9 +14,6 @@ const char* currentPassword;
 
 bool isWsConnected = false;
 
-// PCM uplink: stream mic in 1024-byte binary frames (matches backend buffering).
-#define UPLINK_FRAME_BYTES 1024
-
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
@@ -25,7 +21,6 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         Serial.println("[WSc] Disconnected!");
         isWsConnected = false;
       }
-      audioStopRecording();  // fail-safe: never leave the mic streaming
       break;
 
     case WStype_CONNECTED:
@@ -34,23 +29,9 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
       break;
 
     case WStype_TEXT:
-      // Control channel from backend. Lightweight strstr parse (no JSON alloc
-      // in the hot callback). Expected: {"event":"start_audio"|"stop_audio"}.
-      if (strstr((const char*)payload, "start_audio")) {
-        Serial.println("[PTT] start_audio -> mic ON");
-        audioStartRecording();
-      } else if (strstr((const char*)payload, "stop_audio")) {
-        Serial.println("[PTT] stop_audio -> mic OFF");
-        audioStopRecording();
-      } else {
-        Serial.printf("[WSc] text: %s\n", payload);
-      }
-      break;
-
-    case WStype_BIN:
-      // Downlink TTS PCM (24 kHz, 16-bit mono) — hand off to audioTask for
-      // playback. Do NOT call i2s_write here (this runs in networkTask).
-      audioEnqueueDownlink(payload, length);
+      // Jalur ini hanya untuk telemetri (uplink). Audio voice-assistant kini
+      // diproses di browser, jadi tidak ada lagi perintah start/stop audio.
+      Serial.printf("[WSc] text: %s\n", payload);
       break;
 
     case WStype_ERROR:
@@ -87,7 +68,7 @@ void connectWiFi(const char* ssid, const char* password) {
 // Gunakan parameter const char* path (misalnya "/ws/device") saat pemanggilan di main.cpp
 void initWebSocket(const char* host, uint16_t port, const char* path) {
   // WSS via Cloudflare Tunnel. Library defaultnya kirim "Origin: file://" yang diblok CORS.
-  // Override ke origin yang valid SEBELUM beginSSL supaya handshake lolos middleware.
+  // Override ke origin yang valid dan sertakan x-api-key untuk autentikasi device.
   webSocket.setExtraHeaders("Origin: https://healy-observer.my.id");
   webSocket.beginSSL(websocket_host, websocket_port, path);
   webSocket.onEvent(webSocketEvent);
@@ -96,20 +77,6 @@ void initWebSocket(const char* host, uint16_t port, const char* path) {
 
 void sendTelemetry(const char* jsonPayload) {
   webSocket.sendTXT(jsonPayload);
-}
-
-void networkAudioPump() {
-  // Only stream while a PTT session is active and the socket is up.
-  if (!isWsConnected || !audioIsRecording()) return;
-
-  // Drain whatever the mic captured since last tick, frame by frame.
-  // Bounded per call so we never starve webSocket.loop()/telemetry.
-  static uint8_t frame[UPLINK_FRAME_BYTES];
-  for (int i = 0; i < 4; i++) {  // up to 4 KB per pump cycle
-    size_t n = audioReadUplinkChunk(frame, sizeof(frame));
-    if (n == 0) break;
-    webSocket.sendBIN(frame, n);
-  }
 }
 
 void networkLoop() {

@@ -28,9 +28,9 @@ if [ ! -f "frontend/.env.local" ]; then
     exit 1
 fi
 
-# 2. Pull Latest Changes (Optional)
-# echo -e "${YELLOW}📥 Pulling latest changes from Git...${NC}"
-# git pull origin main
+# 2. Pull Latest Changes
+echo -e "${YELLOW}📥 Pulling latest changes from Git...${NC}"
+git pull origin main
 
 # 3. Backend Setup (Go)
 echo -e "${YELLOW}🔧 Setting up Backend (Go)...${NC}"
